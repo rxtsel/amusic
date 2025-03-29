@@ -316,76 +316,11 @@ fn listen_for_player_events() -> Result<(), String> {
     Err("Player events stream ended unexpectedly".into())
 }
 
-// Function to open Apple Music in chromium app mode or focus existing instance
+// Function to open Apple Music in chromium app mode
 fn open_apple_music() {
-    println!("Opening Apple Music in app mode or focusing existing instance...");
+    println!("Opening Apple Music in app mode...");
 
-    // Check if an instance is already running
-    let output = std::process::Command::new("pgrep")
-        .args(["-f", "chromium --app=https://music.apple.com"])
-        .output();
-
-    match output {
-        Ok(output) => {
-            if !output.stdout.is_empty() {
-                // If instance exists, try multiple methods to focus it
-                println!("Apple Music instance exists, trying to focus it");
-
-                // Try different ways to focus the window in case one fails
-
-                // Method 1: Using wmctrl with window name
-                let wmctrl_result = std::process::Command::new("wmctrl")
-                    .args(["-a", "Apple Music"])
-                    .status();
-
-                if let Ok(status) = wmctrl_result {
-                    if status.success() {
-                        println!("Successfully focused window using wmctrl with window name");
-                        return;
-                    }
-                }
-
-                // Method 2: Try using wmctrl with partial window name
-                let wmctrl_result2 = std::process::Command::new("wmctrl")
-                    .args(["-a", "music.apple.com"])
-                    .status();
-
-                if let Ok(status) = wmctrl_result2 {
-                    if status.success() {
-                        println!(
-                            "Successfully focused window using wmctrl with partial window name"
-                        );
-                        return;
-                    }
-                }
-
-                // Method 3: Try using xdotool search and windowactivate
-                let xdotool_result = std::process::Command::new("xdotool")
-                    .args([
-                        "search",
-                        "--onlyvisible",
-                        "--class",
-                        "chromium",
-                        "windowactivate",
-                    ])
-                    .status();
-
-                if let Ok(status) = xdotool_result {
-                    if status.success() {
-                        println!("Successfully focused window using xdotool");
-                        return;
-                    }
-                }
-
-                // If all focus attempts failed, log the issue but don't open a new instance
-                println!("Failed to focus existing Apple Music window with available methods");
-                return;
-            }
-        }
-        Err(e) => eprintln!("Error checking for existing Apple Music instance: {}", e),
-    }
-
-    // If no instance exists, open a new one
+    // Simply launch a new instance
     println!("Opening new Apple Music instance");
     if let Err(e) = std::process::Command::new("chromium")
         .args([
@@ -410,15 +345,12 @@ pub fn run() {
                 Err(e) => eprintln!("Failed to initialize Discord presence: {}", e),
             }
 
-            // Create tray menu items
-            let show_i = MenuItem::with_id(app, "show", "Show Apple Music", true, None::<&str>)
-                .expect("Failed to create 'Show' menu item");
+            // Create tray menu items - only quit option
             let quit_i = MenuItem::with_id(app, "quit", "Quit Apple Music", true, None::<&str>)
                 .expect("Failed to create 'Quit' menu item");
 
-            // Create tray menu with items
-            let menu =
-                Menu::with_items(app, &[&show_i, &quit_i]).expect("Failed to create tray menu");
+            // Create tray menu with just the quit item
+            let menu = Menu::with_items(app, &[&quit_i]).expect("Failed to create tray menu");
 
             // Create the tray icon with menu
             let _tray = TrayIconBuilder::new()
@@ -431,10 +363,6 @@ pub fn run() {
                 .menu(&menu)
                 // Always show the menu on right click
                 .on_menu_event(|app, event| match event.id.as_ref() {
-                    "show" => {
-                        println!("Show menu item clicked");
-                        open_apple_music();
-                    }
                     "quit" => {
                         println!("Quit menu item clicked");
                         // Find and kill any chromium --app instances first
