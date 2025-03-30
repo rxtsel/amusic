@@ -2,11 +2,11 @@
 
 A simple discord rich presence client for apple music build in Tauri and Rust.
 
-[!image1](./ss/1743362925_grim.png)
+![image1](./ss/1743362925_grim.png)
 
-[!image2](./ss/1743362954_grim.png)
-
-[!image3](./ss/1743362167_grim.png)
+|  |  |
+| ------------- | -------------- |
+| ![image2](./ss/1743362954_grim.png) | ![image3](./ss/1743362167_grim.png) |
 
 >[!WARNING]
 > This application only works on Linux and has been tested on Arch Linux with Wayland.
