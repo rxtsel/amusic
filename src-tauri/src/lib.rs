@@ -14,7 +14,7 @@ use urlencoding::encode;
 use lazy_static::lazy_static;
 
 // Discord application client ID - change this if needed
-const DISCORD_CLIENT_ID: &str = "XXXXXXXXXXXXXXXXXXX";
+const DISCORD_CLIENT_ID: &str = "1354665491792138350";
 
 // URL for Apple Music
 const APPLE_MUSIC_URL: &str = "https://music.apple.com";
@@ -281,31 +281,53 @@ fn update_discord_presence() -> Result<String, String> {
     let title = metadata.title().unwrap_or("No title").to_string();
     let artist = metadata.artists().unwrap_or(vec!["Unknown"])[0].to_string();
     let album = metadata.album_name().unwrap_or("Without album").to_string();
+    let album_text = &format!("Album: {album}");
 
-    // Get the song duration and current position
-    let length_micros = metadata.length().unwrap_or_default().as_micros();
-    let position = player.get_position().unwrap_or_default().as_micros();
+    let length = metadata.length().unwrap_or_default();
 
-    // Calculate the start and end times
+    // Validate that the duration is reasonable (less than 24 hours in seconds)
+    // If it's not a reasonable value, use a default value of 0 minutes
+    let length_seconds = if length.as_secs() > 86400 {
+        println!(
+            "Invalid duration detected: {} seconds. Using default value.",
+            length.as_secs()
+        );
+        0 // 0 minutes as default value
+    } else {
+        length.as_secs() as i64
+    };
+
+    // Get the current position using the MPRIS method
+    let position = player.get_position().unwrap_or_default();
+
+    // Validate that the position is reasonable (less than the total duration)
+    let position_seconds = if position.as_secs() > length.as_secs() || position.as_secs() > 86400 {
+        println!(
+            "Invalid position detected: {} seconds. Using default value.",
+            position.as_secs()
+        );
+        0 // Starting from the beginning as default value
+    } else {
+        position.as_secs() as i64
+    };
+
+    // Calculate timestamps for Discord
     let current_time = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs() as i64;
 
-    // Convert from microseconds to seconds
-    let position_seconds = position / 1_000_000;
-    let remaining_seconds = (length_micros.saturating_sub(position)) / 1_000_000;
+    // Calculate when the song started playing
+    let start_time = current_time - position_seconds;
 
-    // Calculate the start time (when the song started playing)
-    let start_time = current_time - position_seconds as i64;
-
-    // Calculate the end time
-    let end_time = current_time + remaining_seconds as i64;
+    // Calculate when the song will end
+    let end_time = start_time + length_seconds;
 
     // Assets for Discord activity
     let mut assets = activity::Assets::new()
         .small_image("amusic_lg")
-        .small_text("Apple Music");
+        .small_text("Apple Music")
+        .large_text(album_text);
 
     // Try to find album cover online using iTunes API
     let artwork_url = get_artwork_url(&artist, &title);
@@ -336,8 +358,8 @@ fn update_discord_presence() -> Result<String, String> {
         client
             .set_activity(
                 activity::Activity::new()
-                    .state(&format!("Album: {album}"))
-                    .details(&format!("{artist} - {title}"))
+                    .details(&title)
+                    .state(&artist)
                     .assets(assets)
                     .activity_type(activity::ActivityType::Listening)
                     .buttons(vec![button])
