@@ -11,7 +11,8 @@
         "title": "AMusic",
         "width": 1100,
         "height": 600,
-        "visible": false
+        "resizable": true,
+        "fullscreen": true
       }
     ],
     "security": {
