@@ -8,7 +8,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "amusic",
+        "title": "AMusic",
         "width": 800,
         "height": 600,
         "visible": false
@@ -27,12 +27,6 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ],
-    "linux": {
-      "appimage": {
-        "bundleMediaFramework": false,
-        "files": {}
-      }
-    }
+    ]
   }
 }
