@@ -1,5 +1,5 @@
 [package]
-name = "amusic"
+name = "AMusic"
 version = "0.1.0"
 description = "A simple discord rich presence client for apple music build in Rust"
 authors = ["@rxtsel"]
