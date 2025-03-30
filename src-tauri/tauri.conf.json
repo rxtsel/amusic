@@ -3,9 +3,7 @@
   "productName": "amusic",
   "version": "0.1.0",
   "identifier": "com.amusic.app",
-  "build": {
-    "frontendDist": "../src"
-  },
+  "build": {},
   "app": {
     "withGlobalTauri": true,
     "windows": [
