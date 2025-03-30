@@ -3,24 +3,6 @@
 version = 4
 
 [[package]]
-name = "AMusic"
-version = "0.1.0"
-dependencies = [
- "dbus",
- "discord-rich-presence",
- "lazy_static",
- "mpris",
- "opener",
- "reqwest",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-opener",
- "urlencoding",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -57,6 +39,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94fb8275041c72129eb51b7d0322c29b8387a0386127718b096429201a5d6ece"
 dependencies = [
  "alloc-no-stdlib",
+]
+
+[[package]]
+name = "amusic"
+version = "0.1.0"
+dependencies = [
+ "dbus",
+ "discord-rich-presence",
+ "lazy_static",
+ "mpris",
+ "opener",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-opener",
+ "urlencoding",
 ]
 
 [[package]]
