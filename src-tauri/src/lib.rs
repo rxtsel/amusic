@@ -537,6 +537,8 @@ fn open_apple_music() {
     match std::process::Command::new(&browser_cmd)
         .args([
             "--app=".to_string() + APPLE_MUSIC_URL,
+            "--user-data-dir=/tmp/apple-music-profile".to_string(),
+            "--no-first-run".to_string(),
             "--class=AppleMusic".to_string(),
             // Add additional arguments to improve MPRIS compatibility
             "--enable-features=MediaSessionService".to_string(),
