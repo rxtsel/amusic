@@ -1,4 +1,15 @@
-# 🎵 AMusic
+# AMusic
+
+## Table of Contents
+
+<!--toc:start-->
+- [Features](#features)
+- [Development](#development)
+  - [Prerequisites](#prerequisites)
+  - [Steps](#steps)
+  - [Create AppImage](#create-appimage)
+- [Installation](#installation)
+<!--toc:end-->
 
 A simple discord rich presence client for apple music build in Tauri and Rust.
 
@@ -55,3 +66,8 @@ AMusic is built using:
 ```sh
 NO_STRIP=true cargo tauri build
 ```
+
+## Installation
+
+Go to [releases](https://github.com/rxtsel/amusic/releases) and download the
+latest AppImage file. Please follow the instructions provided in the release notes for installation.
