@@ -280,8 +280,6 @@ fn update_discord_presence() -> Result<String, String> {
 
     let title = metadata.title().unwrap_or("No title").to_string();
     let artist = metadata.artists().unwrap_or(vec!["Unknown"])[0].to_string();
-    let album = metadata.album_name().unwrap_or("Without album").to_string();
-    let album_text = &format!("Album: {album}");
 
     let length = metadata.length().unwrap_or_default();
 
@@ -326,8 +324,7 @@ fn update_discord_presence() -> Result<String, String> {
     // Assets for Discord activity
     let mut assets = activity::Assets::new()
         .small_image("amusic_lg")
-        .small_text("Apple Music")
-        .large_text(album_text);
+        .small_text("Apple Music");
 
     // Try to find album cover online using iTunes API
     let artwork_url = get_artwork_url(&artist, &title);
