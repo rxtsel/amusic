@@ -1,6 +1,6 @@
 [package]
 name = "amusic"
-version = "0.1.0"
+version = "0.1.1"
 description = "A simple discord rich presence client for apple music build in Rust"
 authors = ["@rxtsel"]
 edition = "2021"
