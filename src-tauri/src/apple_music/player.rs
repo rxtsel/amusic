@@ -136,6 +136,9 @@ fn cache_song_info(song_info: SongInfo) -> Result<()> {
 }
 
 /// Function to update Discord presence based on current player state
+/// This function ensures we get complete song data before updating Discord
+/// and once a song's duration is determined, it remains consistent
+/// even if the user skips around in the track using the progress bar
 pub fn update_discord_presence() -> Result<String> {
     // Find our specific Apple Music player
     println!("Updating Discord presence - looking for our Apple Music player...");
@@ -196,7 +199,7 @@ pub fn update_discord_presence() -> Result<String> {
     if let Some(mut cached_song) = get_cached_song_info(&title, &artist) {
         println!("Using cached song information for {} - {}", artist, title);
 
-        // Always update end_time if we have a valid one now
+        // Only update end_time if we don't have one yet but now we do
         if cached_song.end_time.is_none() && end_time.is_some() {
             println!(
                 "Updating end time with newly available information: {:?}",
@@ -208,6 +211,7 @@ pub fn update_discord_presence() -> Result<String> {
             let updated_song = SongInfo {
                 title: cached_song.title.clone(),
                 artist: cached_song.artist.clone(),
+                // Keep the original start_time from cache to maintain consistency
                 start_time: cached_song.start_time,
                 end_time,
                 artwork_url: cached_song.artwork_url.clone(),
@@ -217,7 +221,8 @@ pub fn update_discord_presence() -> Result<String> {
             let _ = cache_song_info(updated_song);
         }
 
-        // Update Discord with cached information
+        // Always use the cached start_time and end_time values
+        // This ensures consistency even if the user moves the progress bar
         discord::set_activity(
             &cached_song.title,
             &cached_song.artist,
@@ -239,6 +244,10 @@ pub fn update_discord_presence() -> Result<String> {
 
     if end_time.is_some() {
         println!("Valid song length detected: {} seconds", length);
+        println!(
+            "Setting initial start_time={}, end_time={:?}",
+            start_time, end_time
+        );
     } else {
         println!(
             "Invalid song length: {} seconds. Using None for end_time initially.",

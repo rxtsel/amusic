@@ -1,4 +1,5 @@
 use crate::apple_music::player;
+use crate::commands::start_discord_presence;
 use crate::config::constants::APPLE_MUSIC_URL;
 use std::time::Duration;
 
@@ -60,6 +61,9 @@ pub fn open_apple_music() {
                     e
                 ),
             }
+
+            // Start discord presence
+            let _ = start_discord_presence();
         }
         Err(e) => {
             eprintln!("Failed to open Apple Music with {}: {}", browser_cmd, e);

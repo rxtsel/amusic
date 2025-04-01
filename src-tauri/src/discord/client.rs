@@ -76,12 +76,12 @@ pub fn set_activity(
         // Create button for Apple Music
         let button = activity::Button::new("Play in Apple Music", apple_music_url);
 
-        // Create timestamps with start time and initial end time of 0
+        // Create timestamps with start time and initial end time
         let mut timestamps = activity::Timestamps::new()
             .start(start_time)
             .end(start_time);
 
-        // Update with real data when available
+        // Only add end time if we have a valid one
         if let Some(end) = end_time {
             if end > start_time && end - start_time <= 86400 {
                 // Ensure end time is reasonable (less than 24 hours)
@@ -91,10 +91,10 @@ pub fn set_activity(
                     end - start_time
                 );
             } else {
-                println!("Received invalid end time, keeping initial end time");
+                println!("Received invalid end time, not setting end time");
             }
         } else {
-            println!("No end time available yet, using initial value");
+            println!("No end time available yet, waiting for duration data");
         }
 
         // Update Discord activity
@@ -125,9 +125,51 @@ pub fn start_periodic_updates() {
         std::thread::sleep(Duration::from_secs(5));
         println!("Starting Discord presence polling thread");
 
+        // Track how many times we've tried to update for the current song
+        let mut attempts_for_current_song = 0;
+        let mut last_song_title = String::new();
+        let mut last_song_artist = String::new();
+
         loop {
             match crate::apple_music::player::update_discord_presence() {
-                Ok(msg) => println!("Polling update: {}", msg),
+                Ok(msg) => {
+                    println!("Polling update: {}", msg);
+
+                    // Check if we're waiting for song data
+                    if msg.contains("Waiting for complete song data for") {
+                        // Extract song info from message
+                        if let Some(song_info) =
+                            msg.strip_prefix("Waiting for complete song data for ")
+                        {
+                            let parts: Vec<&str> = song_info.split(" - ").collect();
+                            if parts.len() == 2 {
+                                let artist = parts[0];
+                                let title = parts[1];
+
+                                // Check if this is the same song as last time
+                                if artist == last_song_artist && title == last_song_title {
+                                    attempts_for_current_song += 1;
+                                } else {
+                                    // New song, reset counter
+                                    attempts_for_current_song = 1;
+                                    last_song_title = title.to_string();
+                                    last_song_artist = artist.to_string();
+                                }
+
+                                // For the first few attempts, poll more frequently to get data quickly
+                                if attempts_for_current_song < 5 {
+                                    std::thread::sleep(Duration::from_secs(2));
+                                    continue;
+                                }
+                            }
+                        }
+                    } else {
+                        // We got complete data or something else happened
+                        attempts_for_current_song = 0;
+                        last_song_title.clear();
+                        last_song_artist.clear();
+                    }
+                }
                 Err(e) => {
                     // Only show errors that aren't expected during initialization
                     if !e.to_string().contains("PID not stored")
@@ -137,7 +179,7 @@ pub fn start_periodic_updates() {
                     }
                 }
             }
-            std::thread::sleep(Duration::from_secs(10)); // Adjustable interval
+            std::thread::sleep(Duration::from_secs(10)); // Standard interval
         }
     });
 }
