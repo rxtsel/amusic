@@ -55,7 +55,7 @@ pub fn set_activity(
     artist: &str,
     artwork_url: Option<&str>,
     start_time: i64,
-    end_time: i64,
+    end_time: Option<i64>,
     apple_music_url: &str,
 ) -> Result<()> {
     let mut client_guard = lock_client()?;
@@ -76,8 +76,26 @@ pub fn set_activity(
         // Create button for Apple Music
         let button = activity::Button::new("Play in Apple Music", apple_music_url);
 
-        // Create timestamps
-        let timestamps = activity::Timestamps::new().start(start_time).end(end_time);
+        // Create timestamps with start time and initial end time of 0
+        let mut timestamps = activity::Timestamps::new()
+            .start(start_time)
+            .end(start_time);
+
+        // Update with real data when available
+        if let Some(end) = end_time {
+            if end > start_time && end - start_time <= 86400 {
+                // Ensure end time is reasonable (less than 24 hours)
+                timestamps = timestamps.end(end);
+                println!(
+                    "Using actual song duration for Discord presence: {} seconds",
+                    end - start_time
+                );
+            } else {
+                println!("Received invalid end time, keeping initial end time");
+            }
+        } else {
+            println!("No end time available yet, using initial value");
+        }
 
         // Update Discord activity
         client
