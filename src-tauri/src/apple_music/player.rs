@@ -44,10 +44,6 @@ pub(crate) fn get_pid() -> Result<u32> {
 pub fn find_apple_music_player() -> Result<Player> {
     // Get our stored PID
     let apple_music_pid = get_pid()?;
-    println!(
-        "Looking for Apple Music player with PID: {}",
-        apple_music_pid
-    );
 
     // Find all players and match by PID
     let finder = PlayerFinder::new()
@@ -56,8 +52,6 @@ pub fn find_apple_music_player() -> Result<Player> {
     let players = finder
         .find_all()
         .map_err(|e| AppError::Mpris(format!("Error finding players: {}", e)))?;
-
-    println!("Found {} players via MPRIS", players.len());
 
     // If no players, return error
     if players.is_empty() {
@@ -74,11 +68,6 @@ pub fn find_apple_music_player() -> Result<Player> {
     for player in players {
         // Get the D-Bus name
         let bus_name = player.bus_name();
-        println!(
-            "Examining player: {} (bus name: {})",
-            player.identity(),
-            bus_name
-        );
 
         // Check if bus_name contains our PID
         if bus_name.contains(&pid_str) {
@@ -86,7 +75,6 @@ pub fn find_apple_music_player() -> Result<Player> {
                 "Found AppleMusic instance with PID {}: {}",
                 apple_music_pid, bus_name
             );
-            println!("Identity: {}", player.identity());
 
             // Return the player directly
             return Ok(player);
@@ -195,10 +183,6 @@ pub fn update_discord_presence() -> Result<String> {
 
 /// Function to listen for MPRIS events and update Discord presence accordingly
 pub fn listen_for_player_events() -> Result<()> {
-    // Check first if we have a stored PID
-    let apple_music_pid = get_pid()?;
-    println!("Using stored Apple Music PID: {}", apple_music_pid);
-
     // Try to find our specific player
     println!("Attempting to find Apple Music player for event listening...");
     let player = match find_apple_music_player() {

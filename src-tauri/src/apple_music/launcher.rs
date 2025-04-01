@@ -50,7 +50,6 @@ pub fn open_apple_music() {
             }
 
             // Wait a bit for the browser to fully initialize
-            println!("Waiting for browser to initialize...");
             std::thread::sleep(Duration::from_secs(5));
 
             // Try to verify if MPRIS is working
