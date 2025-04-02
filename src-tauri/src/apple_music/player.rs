@@ -163,9 +163,9 @@ pub fn update_discord_presence() -> Result<String> {
 
     // Check if player is actually playing something
     if progress.playback_status() != PlaybackStatus::Playing {
-        // Solo limpiamos la presencia si el reproductor está explícitamente pausado o detenido
-        // Esto lo manejamos a través del evento Event::Paused o Event::Stopped
-        // No limpiamos aquí para evitar flasheos durante los cambios de canción
+        // We only clear the presence if the player is explicitly paused or stopped
+        // We handle this through the Event::Paused or Event::Stopped events
+        // We don't clear here to avoid flashing during song changes
         return Err(AppError::Player("Player is not currently playing".into()));
     }
 
