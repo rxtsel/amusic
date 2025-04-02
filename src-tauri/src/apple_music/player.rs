@@ -163,8 +163,9 @@ pub fn update_discord_presence() -> Result<String> {
 
     // Check if player is actually playing something
     if progress.playback_status() != PlaybackStatus::Playing {
-        // Clear presence if not playing
-        discord::clear_presence()?;
+        // Solo limpiamos la presencia si el reproductor está explícitamente pausado o detenido
+        // Esto lo manejamos a través del evento Event::Paused o Event::Stopped
+        // No limpiamos aquí para evitar flasheos durante los cambios de canción
         return Err(AppError::Player("Player is not currently playing".into()));
     }
 
@@ -238,23 +239,6 @@ pub fn update_discord_presence() -> Result<String> {
         ));
     }
 
-    // We already calculated these values above, so we can reuse them:
-    // - start_time
-    // - end_time
-
-    if end_time.is_some() {
-        println!("Valid song length detected: {} seconds", length);
-        println!(
-            "Setting initial start_time={}, end_time={:?}",
-            start_time, end_time
-        );
-    } else {
-        println!(
-            "Invalid song length: {} seconds. Using None for end_time initially.",
-            length
-        );
-    }
-
     // Try to find album cover online using iTunes API
     let artwork_url = artwork::get_artwork_url(&artist, &title);
 
@@ -308,34 +292,6 @@ pub fn listen_for_player_events() -> Result<()> {
     let player_name = player.identity().to_string();
     println!("Monitoring player: {}", player_name);
 
-    // Check if player is playing
-    let mut is_playing = match player.get_playback_status() {
-        Ok(status) => {
-            let playing = status == PlaybackStatus::Playing;
-            println!(
-                "Initial playback status: {}",
-                if playing { "Playing" } else { "Not playing" }
-            );
-            playing
-        }
-        Err(e) => {
-            println!(
-                "Error getting initial playback status: {}. Assuming not playing.",
-                e
-            );
-            false
-        }
-    };
-
-    // Update presence immediately if already playing
-    if is_playing {
-        println!("Player is already playing, updating presence...");
-        match update_discord_presence() {
-            Ok(msg) => println!("{}", msg),
-            Err(e) => println!("Could not update Discord presence: {}", e),
-        }
-    }
-
     // Get player events stream
     println!("Setting up event listener for player: {}", player_name);
     let events = player
@@ -351,19 +307,14 @@ pub fn listen_for_player_events() -> Result<()> {
             match event {
                 Event::Playing => {
                     println!("Event: Player started playing");
-                    is_playing = true;
                     let _ = update_discord_presence();
                 }
                 Event::Paused | Event::Stopped => {
-                    println!("Event: Player paused or stopped");
-                    is_playing = false;
-                    let _ = discord::clear_presence();
+                    println!("Event: Player paused or stoped");
                 }
-                Event::TrackChanged(_) => {
+                Event::TrackChanged(_) | Event::Seeked { position_in_us: _ } => {
                     println!("Event: Track changed");
-                    if is_playing {
-                        let _ = update_discord_presence();
-                    }
+                    let _ = update_discord_presence();
                 }
                 Event::PlayerShutDown => {
                     println!("Event: Player shut down");

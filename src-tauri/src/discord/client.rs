@@ -49,7 +49,7 @@ pub fn clear_presence() -> Result<()> {
     Ok(())
 }
 
-/// Update Discord rich presence with current track information
+/// Updates the Discord presence without clearing it first, preventing "flashing"
 pub fn set_activity(
     title: &str,
     artist: &str,
@@ -76,25 +76,30 @@ pub fn set_activity(
         // Create button for Apple Music
         let button = activity::Button::new("Play in Apple Music", apple_music_url);
 
-        // Create timestamps with start time and initial end time
+        // Create timestamps with start time and default duration of 3 minutes
+        const MINUTES_IN_SECONDS: i64 = 180; // 3 minutes
         let mut timestamps = activity::Timestamps::new()
             .start(start_time)
-            .end(start_time);
+            .end(start_time + MINUTES_IN_SECONDS);
 
         // Only add end time if we have a valid one
         if let Some(end) = end_time {
-            if end > start_time && end - start_time <= 86400 {
-                // Ensure end time is reasonable (less than 24 hours)
-                timestamps = timestamps.end(end);
+            // Ensure end time is reasonable: greater than start time and less than 24 hours
+            if end > start_time && (end - start_time) <= 86400 {
+                // Calculate duration in seconds
+                let duration = end - start_time;
+
+                // Update the end time
+                timestamps = timestamps.end(start_time + duration);
                 println!(
                     "Using actual song duration for Discord presence: {} seconds",
-                    end - start_time
+                    duration
                 );
             } else {
-                println!("Received invalid end time, not setting end time");
+                println!("Received invalid end time, using default duration of 3 minutes");
             }
         } else {
-            println!("No end time available yet, waiting for duration data");
+            println!("No end time available yet, using default duration of 3 minutes");
         }
 
         // Update Discord activity
